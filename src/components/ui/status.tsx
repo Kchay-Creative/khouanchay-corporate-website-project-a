@@ -1,45 +1,53 @@
 import Link from "next/link";
-export function AuthRequired({ next = "/management" }: { next?: string }) {
+import { getI18n } from "@/i18n/server";
+export async function AuthRequired({
+  next = "/management",
+}: {
+  next?: string;
+}) {
+  const { dictionary: d } = await getI18n();
   return (
     <main className="status-page">
       <div className="status-card">
-        <span className="status-code">Sign in</span>
-        <h1>Authentication Required</h1>
-        <p>Please sign in to access this page.</p>
+        <span className="status-code">{d.status.signInCode}</span>
+        <h1>{d.status.authTitle}</h1>
+        <p>{d.status.authBody}</p>
         <Link
           className="button button-primary"
           href={`/login?next=${encodeURIComponent(next)}`}
         >
-          Sign In
+          {d.status.signIn}
         </Link>
       </div>
     </main>
   );
 }
-export function AccessDenied() {
+export async function AccessDenied() {
+  const { dictionary: d } = await getI18n();
   return (
     <main className="status-page">
       <div className="status-card">
         <span className="status-code">403</span>
-        <h1>Access Denied</h1>
-        <p>Your account does not have permission to access this page.</p>
+        <h1>{d.status.deniedTitle}</h1>
+        <p>{d.status.deniedBody}</p>
         <Link className="button button-primary" href="/management">
-          Back to Management
+          {d.status.backManagement}
         </Link>
       </div>
     </main>
   );
 }
-export function EmptyState({
-  title = "No data available.",
+export async function EmptyState({
+  title,
   detail,
 }: {
   title?: string;
   detail?: string;
 }) {
+  const { dictionary: d } = await getI18n();
   return (
     <div className="empty-state">
-      <h3>{title}</h3>
+      <h3>{title ?? d.status.noData}</h3>
       {detail ? <p>{detail}</p> : null}
     </div>
   );

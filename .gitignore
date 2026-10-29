@@ -10,3 +10,6 @@ coverage/
 !.env.example
 
 *.tsbuildinfo
+
+# Local design/editor assistant state
+.impeccable/

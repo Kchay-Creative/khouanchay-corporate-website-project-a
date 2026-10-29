@@ -3,36 +3,38 @@ import {
   PageHero,
   Placeholder,
 } from "@/components/public/sections";
-export default function NewsPage() {
+import { formatMessage } from "@/i18n";
+import { getI18n, pageMetadata } from "@/i18n/server";
+export async function generateMetadata() {
+  return pageMetadata("news");
+}
+export default async function NewsPage() {
+  const { dictionary: d } = await getI18n();
+  const c = d.news;
   return (
     <main>
-      <PageHero
-        title="News & Activities"
-        description="Company updates, events, activities, and announcements."
-      />
-      <ContentSection title="Featured News">
-        <Placeholder
-          title="Featured article"
-          detail="An approved featured article will appear here."
-        />
+      <PageHero title={c.title} description={c.intro} />
+      <ContentSection title={c.featuredTitle}>
+        <Placeholder title={c.featuredArticle} detail={c.featuredBody} />
       </ContentSection>
-      <ContentSection title="Latest Updates" className="section-tint">
+      <ContentSection title={c.latestTitle} className="section-tint">
         <div className="three-grid">
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <article className="news-placeholder" key={n}>
-              <div className="news-image">Image pending</div>
+              <div className="news-image">{c.imagePending}</div>
               <div className="news-content">
-                <span>Article placeholder</span>
-                <h3>News item {String(n).padStart(2, "0")}</h3>
-                <p>Publication date, category, and article copy pending.</p>
+                <span>{c.articlePlaceholder}</span>
+                <h3>
+                  {formatMessage(c.item, {
+                    number: String(n).padStart(2, "0"),
+                  })}
+                </h3>
+                <p>{c.itemBody}</p>
               </div>
             </article>
           ))}
         </div>
-        <p className="section-note">
-          Article pages and pagination will be connected when news content is
-          available.
-        </p>
+        <p className="section-note">{c.note}</p>
       </ContentSection>
     </main>
   );

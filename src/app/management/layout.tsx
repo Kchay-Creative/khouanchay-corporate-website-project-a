@@ -2,6 +2,7 @@ import { checkAccess } from "@/auth/access";
 import { managementNavigation, visibleNavigation } from "@/config/navigation";
 import { AuthRequired, AccessDenied } from "@/components/ui/status";
 import { ManagementShell } from "@/components/management/management-shell";
+
 export default async function ManagementLayout({
   children,
 }: {
@@ -15,7 +16,6 @@ export default async function ManagementLayout({
   return (
     <ManagementShell
       items={visibleNavigation(managementNavigation, access.session.role)}
-      user={access.session.id}
     >
       {children}
     </ManagementShell>

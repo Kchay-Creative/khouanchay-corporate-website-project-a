@@ -4,6 +4,8 @@ import {
   createSessionToken,
   devAuthEnabled,
   sessionCookie,
+  sessionCookieMaxAge,
+  sessionCookieOptions,
 } from "@/auth/session";
 
 export async function POST(request: NextRequest) {
@@ -32,13 +34,7 @@ export async function POST(request: NextRequest) {
   response.cookies.set(
     sessionCookie.name,
     createSessionToken(account.id, account.role),
-    {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
-      maxAge: sessionCookie.maxAge,
-    },
+    sessionCookieOptions(request, sessionCookieMaxAge()),
   );
   return response;
 }

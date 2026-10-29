@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
 import { devAuthEnabled, getSession } from "@/auth/session";
 import Link from "next/link";
-export const metadata: Metadata = { title: "Sign In" };
+import { formatMessage } from "@/i18n";
+import { getI18n, pageMetadata } from "@/i18n/server";
+export async function generateMetadata() {
+  return pageMetadata("login");
+}
 export default async function LoginPage({
   searchParams,
 }: {
@@ -9,16 +12,18 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const session = await getSession();
+  const { dictionary: d } = await getI18n();
+  const c = d.login;
   const next = params.next === "/management/edit" ? params.next : "/management";
   return (
     <main className="login-page">
       <div className="login-card">
-        <h1>Sign In</h1>
-        <p>Authorized company users can access the Management workspace.</p>
+        <h1>{c.title}</h1>
+        <p>{c.intro}</p>
         {session ? (
           <div className="notice">
-            Signed in as {session.id}.{" "}
-            <Link href={next}>Continue to Management</Link>
+            {formatMessage(c.signedInAs, { name: session.id })}{" "}
+            <Link href={next}>{c.continue}</Link>
           </div>
         ) : devAuthEnabled() ? (
           <form
@@ -28,7 +33,7 @@ export default async function LoginPage({
           >
             <input type="hidden" name="next" value={next} />
             <label>
-              Email
+              {c.email}
               <input
                 name="email"
                 type="email"
@@ -37,7 +42,7 @@ export default async function LoginPage({
               />
             </label>
             <label>
-              Password
+              {c.password}
               <input
                 name="password"
                 type="password"
@@ -47,21 +52,16 @@ export default async function LoginPage({
             </label>
             {params.error === "invalid" ? (
               <p className="form-error" role="alert">
-                Invalid email or password.
+                {c.invalid}
               </p>
             ) : null}
             <button className="button button-primary" type="submit">
-              Sign In
+              {c.submit}
             </button>
-            <p className="form-help">
-              Development accounts are configured locally in .env.local.
-            </p>
+            <p className="form-help">{c.devHelp}</p>
           </form>
         ) : (
-          <div className="notice">
-            Sign in is not configured for this environment. Production
-            authentication will be connected in a later phase.
-          </div>
+          <div className="notice">{c.disabled}</div>
         )}
       </div>
     </main>

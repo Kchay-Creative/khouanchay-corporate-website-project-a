@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getI18n } from "@/i18n/server";
 export function PageHero({
   title,
   description,
@@ -33,22 +34,23 @@ export function ContentSection({
     </section>
   );
 }
-export function Placeholder({
+export async function Placeholder({
   title,
   detail,
 }: {
   title: string;
   detail: string;
 }) {
+  const { dictionary: d } = await getI18n();
   return (
     <div className="placeholder-block">
-      <span className="placeholder-label">Content placeholder</span>
+      <span className="placeholder-label">{d.common.placeholder}</span>
       <h3>{title}</h3>
       <p>{detail}</p>
     </div>
   );
 }
-export function SimpleCard({
+export async function SimpleCard({
   title,
   text,
   href,
@@ -57,13 +59,14 @@ export function SimpleCard({
   text: string;
   href?: string;
 }) {
+  const { dictionary: d } = await getI18n();
   return (
     <article className="simple-card">
       <h3>{title}</h3>
       <p>{text}</p>
       {href ? (
         <Link className="inline-link" href={href}>
-          Learn more <span aria-hidden="true">→</span>
+          {d.common.learnMore} <span aria-hidden="true">→</span>
         </Link>
       ) : null}
     </article>

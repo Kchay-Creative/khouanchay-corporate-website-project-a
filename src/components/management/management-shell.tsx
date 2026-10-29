@@ -1,8 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
+import { OffCanvas } from "@/components/ui/off-canvas";
 import type { NavItem } from "@/config/navigation";
+import { useI18n } from "@/i18n/provider";
+
+const ManagementShellContext = createContext<{ items: NavItem[] } | null>(null);
+
 function SideItems({
   items,
   path,
@@ -12,6 +17,7 @@ function SideItems({
   path: string;
   close: () => void;
 }) {
+  const { dictionary: d } = useI18n();
   return (
     <ul className="management-menu">
       {items.map((item) => (
@@ -24,7 +30,7 @@ function SideItems({
             <span className="menu-symbol" aria-hidden="true">
               {item.href.endsWith("/edit") ? "✎" : "▦"}
             </span>
-            <span>{item.label}</span>
+            <span>{d.nav[item.labelKey]}</span>
           </Link>
           {item.children?.length ? (
             <SideItems items={item.children} path={path} close={close} />
@@ -34,102 +40,93 @@ function SideItems({
     </ul>
   );
 }
+
 export function ManagementShell({
   children,
   items,
-  user,
 }: {
   children: React.ReactNode;
   items: NavItem[];
-  user: string;
 }) {
   const path = usePathname();
-  const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   return (
-    <div
-      className={`management-shell ${collapsed ? "is-collapsed" : ""} ${path.startsWith("/management/edit") ? "is-admin-mode" : ""}`}
-    >
-      {open ? (
-        <button
-          className="drawer-scrim"
-          aria-label="Close navigation"
-          onClick={() => setOpen(false)}
-        />
-      ) : null}
-      <aside
-        className={`management-sidebar ${open ? "drawer-open" : ""}`}
-        aria-label="Management navigation"
+    <ManagementShellContext.Provider value={{ items }}>
+      <div
+        className={`management-shell ${path.startsWith("/management/edit") || path.startsWith("/management/brands") ? "is-admin-mode" : ""}`}
       >
-        <div className="sidebar-brand">
-          <Link href="/management" onClick={() => setOpen(false)}>
-            <span className="wordmark-mark" aria-hidden="true">
-              K
-            </span>
-            <span className="sidebar-brand-text">
-              Khouanchay <small>Management</small>
-            </span>
-          </Link>
-          <button
-            className="collapse-button"
-            type="button"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-expanded={!collapsed}
-            onClick={() => setCollapsed(!collapsed)}
-          >
-            ☰
-          </button>
-        </div>
-        <div className="sidebar-group">
-          <span className="sidebar-label">Workspace</span>
-          <SideItems items={items} path={path} close={() => setOpen(false)} />
-          <div className="future-sections">
-            Future management sections will appear here.
-          </div>
-        </div>
-        <div className="sidebar-bottom">
-          <Link href="/home" onClick={() => setOpen(false)}>
-            <span className="menu-symbol" aria-hidden="true">
-              ←
-            </span>
-            <span>Back to Website</span>
-          </Link>
-          <div className="sidebar-account">
-            <span className="account-avatar" aria-hidden="true">
-              {user.charAt(0).toUpperCase()}
-            </span>
-            <span className="account-name">{user}</span>
-          </div>
-        </div>
-      </aside>
-      <div className="management-main">
-        <header className="management-topbar">
-          <button
-            className="drawer-button"
-            type="button"
-            aria-label="Open navigation"
-            aria-expanded={open}
-            onClick={() => setOpen(true)}
-          >
-            ☰
-          </button>
-          <div className="breadcrumb">
-            Management <span>/</span>{" "}
-            {path.startsWith("/management/edit")
-              ? "Administration"
-              : "Overview"}
-          </div>
-          <div className="topbar-end">
-            <span className="topbar-user">{user}</span>
-            <form action="/api/dev-auth/logout" method="post">
-              <button className="text-button" type="submit">
-                Sign out
-              </button>
-            </form>
-          </div>
-        </header>
         <main className="management-content">{children}</main>
       </div>
-    </div>
+    </ManagementShellContext.Provider>
+  );
+}
+
+export function ManagementDrawer({
+  children,
+}: {
+  children?: React.ReactNode | ((close: () => void) => React.ReactNode);
+}) {
+  const path = usePathname();
+  const { dictionary: d } = useI18n();
+  const context = useContext(ManagementShellContext);
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  if (!context) throw new Error("ManagementDrawer requires ManagementShell");
+
+  return (
+    <>
+      <div className="management-drawer-trigger-row">
+        <button
+          className="management-drawer-trigger"
+          type="button"
+          aria-label={d.management.openNav}
+          aria-expanded={open}
+          aria-controls="management-workspace-drawer"
+          onClick={() => setOpen(true)}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          <span>{d.management.workspace}</span>
+        </button>
+      </div>
+      <OffCanvas
+        open={open}
+        side="left"
+        title={`${d.nav.management} · ${d.management.workspace}`}
+        closeLabel={d.management.closeNav}
+        onClose={close}
+        className="management-workspace-drawer"
+      >
+        <div id="management-workspace-drawer">
+          <div className="management-drawer-context">
+            <span>{d.nav.management}</span>
+            <strong>
+              {path.startsWith("/management/brands")
+                ? d.nav.brandManagement
+                : path.startsWith("/management/edit")
+                  ? d.management.administration
+                  : d.management.overview}
+            </strong>
+          </div>
+          <nav aria-label={d.management.secondaryNav}>
+            <SideItems items={context.items} path={path} close={close} />
+          </nav>
+          <div className="future-sections">{d.management.futureSections}</div>
+          {children ? (
+            <div className="management-drawer-tools">
+              {typeof children === "function" ? children(close) : children}
+            </div>
+          ) : null}
+          <div className="sidebar-bottom">
+            <Link href="/home" onClick={close}>
+              <span className="menu-symbol" aria-hidden="true">
+                ←
+              </span>
+              <span>{d.management.backToWebsite}</span>
+            </Link>
+          </div>
+        </div>
+      </OffCanvas>
+    </>
   );
 }

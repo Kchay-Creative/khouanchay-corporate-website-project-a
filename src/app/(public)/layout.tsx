@@ -1,18 +1,14 @@
-import { getSession } from "@/auth/session";
-import { publicNavigation, visibleNavigation } from "@/config/navigation";
-import { PublicShell } from "@/components/public/public-shell";
-export default async function PublicLayout({
+import { PublicFooter } from "@/components/public/public-footer";
+
+export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
   return (
-    <PublicShell
-      items={visibleNavigation(publicNavigation, session?.role ?? "guest")}
-      account={session?.id ?? null}
-    >
+    <>
       {children}
-    </PublicShell>
+      <PublicFooter />
+    </>
   );
 }

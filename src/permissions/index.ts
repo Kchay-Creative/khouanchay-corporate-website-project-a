@@ -1,12 +1,17 @@
 export const roles = ["guest", "manager", "admin"] as const;
 export type Role = (typeof roles)[number];
-export type Permission = "management:view" | "management:edit";
+export type Permission =
+  "management:view" | "management:edit" | "brands:manage";
 
 const grants: Record<Role, readonly Permission[]> = {
   guest: [],
   manager: ["management:view"],
-  admin: ["management:view", "management:edit"],
+  admin: ["management:view", "management:edit", "brands:manage"],
 };
+
+export function isAuthenticated(role: Role): boolean {
+  return role !== "guest";
+}
 
 export function can(role: Role, permission: Permission): boolean {
   return grants[role].includes(permission);

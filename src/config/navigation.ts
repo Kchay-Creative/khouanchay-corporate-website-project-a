@@ -1,41 +1,55 @@
 import type { Permission, Role } from "@/permissions";
-import { can } from "@/permissions";
+import { can, isAuthenticated } from "@/permissions";
+import type { Dictionary } from "@/i18n";
 
 export type NavItem = {
-  label: string;
+  labelKey: keyof Dictionary["nav"];
   href: string;
+  sectionId?: "home" | "company" | "business" | "brands" | "contact";
   permission?: Permission;
+  guestOnly?: boolean;
   children?: NavItem[];
 };
-export const publicNavigation: NavItem[] = [
-  { label: "Home", href: "/home" },
-  { label: "Company", href: "/company" },
-  { label: "Business", href: "/business" },
-  { label: "Brands", href: "/brands" },
-  { label: "News", href: "/news" },
-  { label: "Careers", href: "/careers" },
-  { label: "Contact", href: "/contact" },
-  { label: "Management", href: "/management", permission: "management:view" },
+
+export const globalNavigation: NavItem[] = [
+  { labelKey: "home", href: "/home", sectionId: "home" },
+  { labelKey: "company", href: "/home#company", sectionId: "company" },
+  { labelKey: "business", href: "/home#business", sectionId: "business" },
+  { labelKey: "brands", href: "/home#brands", sectionId: "brands" },
+  { labelKey: "news", href: "/news" },
+  { labelKey: "careers", href: "/careers" },
+  { labelKey: "contact", href: "/home#contact", sectionId: "contact" },
   {
-    label: "Management Administration",
-    href: "/management/edit",
-    permission: "management:edit",
+    labelKey: "management",
+    href: "/management",
+    permission: "management:view",
   },
 ];
+
 export const managementNavigation: NavItem[] = [
-  { label: "Overview", href: "/management", permission: "management:view" },
+  { labelKey: "overview", href: "/management", permission: "management:view" },
   {
-    label: "Administration",
+    labelKey: "administration",
     href: "/management/edit",
     permission: "management:edit",
   },
+  {
+    labelKey: "brandManagement",
+    href: "/management/brands",
+    permission: "brands:manage",
+  },
 ];
+
 export function visibleNavigation(
   items: readonly NavItem[],
   role: Role,
 ): NavItem[] {
   return items
-    .filter((item) => !item.permission || can(role, item.permission))
+    .filter(
+      (item) =>
+        (!item.permission || can(role, item.permission)) &&
+        (!item.guestOnly || !isAuthenticated(role)),
+    )
     .map((item) => ({
       ...item,
       children: item.children
